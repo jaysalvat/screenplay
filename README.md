@@ -14,7 +14,7 @@ A tiny library to timeline functions
 
 ## Install
 
-Download latest [MarkItUp! version](http://jaysalvat.github.io/screenplay/releases/latest/screenplay.zip) and include it to your page.
+Download latest [Screenplay](http://jaysalvat.github.io/screenplay/releases/latest/screenplay.zip) and include it to your page.
 
 ```html
 <script src="/path/to/screenplay/dist/screenplay.min.js"></script>
