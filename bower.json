@@ -1,15 +1,14 @@
 {
-    "name": "screenplay",
-    "version": "0.0.1-1",
-    "main": [
-        "dist/screenplay.js"
-    ],
-    "ignore": [
-        "src",
-        "test",
-        "gulpfile.js",
-        "package.json"
-    ],
-    "dependencies": {
-    }
+  "name": "screenplay",
+  "version": "0.0.1-1",
+  "main": [
+    "dist/screenplay.js"
+  ],
+  "ignore": [
+    "src",
+    "test",
+    "gulpfile.js",
+    "package.json"
+  ],
+  "dependencies": {}
 }

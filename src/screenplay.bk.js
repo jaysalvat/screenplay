@@ -13,73 +13,74 @@
 })(this, function () {
     'use strict';
 
-    class Screenplay {
-        constructor (settings) {
-            settings = Object.assign({}, {
-                async: true
-            }, settings);
-
-            this.async   = settings.async;
-            this.steps   = [];
-            this.indexes = [];
-            this.markers = {};
-            this.index   = 0;
-            this.loops   = 1;
-            this.playing = false;
-            this.animationEnd  = getEndEventName('animation');
-            this.transitionEnd = getEndEventName('transition');
-            this.events = {
-                'step':   [],
-                'play':   [],
-                'pause':  [],
-                'stop':   [],
-                'loop':   [],
-                'before': [],
-                'after':  []
-            };
-            this.timer  = null;
-            this.finale = () => {};
+    var Screenplay = function (settings) {
+        if (!(this instanceof Screenplay)) {
+            return new Screenplay(settings);
         }
 
-        play(loops) {
+        this.steps   = [];
+        this.indexes = [];
+        this.markers = {};
+        this.index   = 0;
+        this.loops   = 1;
+        this.playing = false;
+        this.animationEnd  = getEndEventName('animation');
+        this.transitionEnd = getEndEventName('transition');
+        this.events = {
+            'step':   [],
+            'play':   [],
+            'pause':  [],
+            'stop':   [],
+            'loop':   [],
+            'before': [],
+            'after':  []
+        };
+        this.timer  = null;
+        this.finale = function () {};
+
+        return this;
+    };
+
+    Screenplay.prototype = {
+        play: function (loops) {
             this.loops = loops ? loops : this.loops;
             this.playing = true;
             this.run();
 
             return this.trigger('play');
-        }
+        },
 
-        pause() {
+        pause: function () {
             this.playing = false;
             this.run();
 
             return this.trigger('pause');
-        }
+        },
 
-        toggle() {
+        toggle: function () {
             return this.playing ? this.pause() : this.play();
-        }
+        },
 
-        stop() {
+        stop: function () {
             this.loops = 1;
             this.playing = false;
             this.finale.call(this);
 
             return this.trigger('stop');
-        }
+        },
 
-        step(fn, repeat) {
+        step: function (fn, repeat) {
             repeat = repeat || 1;
 
-            for (let i = 0; i < repeat; i++) {
+            for (var i = 0; i < repeat; i++) {
                 this.steps.push(fn);
                 this.indexes.push(this.steps.length - 1);
             }
 
             return this;
-        }
+        },
 
-        wait(time) {
+        wait: function (time) {
             this.steps.push(function (next) {
                 clearTimeout(this.timer);
 
@@ -89,35 +90,35 @@
             });
 
             return this;
-        }
+        },
 
-        repeat(repeat) {
-            let last = this.steps[this.steps.length - 1];
+        repeat: function (repeat) {
+            var last = this.steps[this.steps.length - 1];
 
             return this.step(last, repeat);
-        }
+        },
 
-        end(fn) {
+        end: function (fn) {
             this.finale = fn;
 
             return this;
-        }
+        },
 
-        rewind() {
+        rewind: function () {
             this.index = 0;
             this.playing = true;
             this.run();
 
             return this;
-        }
+        },
 
-        marker(marker) {
+        marker: function (marker) {
             this.markers[marker.toString()] = this.steps.length;
 
             return this;
-        }
+        },
 
-        goto(marker) {
+        goto: function (marker) {
             if (typeof marker === 'string') {
                 if (this.markers[marker]) {
                     this.index = this.markers[marker];
@@ -133,15 +134,15 @@
             }
 
             return this;
-        }
+        },
 
-        on(key, fn) {
+        on: function (key, fn) {
             this.events[key].push(fn);
 
             return this;
-        }
+        },
 
-        off(key, fn) {
+        off: function (key, fn) {
             if (fn) {
                 this.events[key] = this.events[key].filter(function (f) {
                     return f !== fn;
@@ -151,35 +152,26 @@
             }
 
             return this;
-        }
+        },
 
-        trigger(key) {
-            this.events[key].forEach((fn) => {
-                fn.call(this);
+        trigger: function (key) {
+            var self = this;
+
+            this.events[key].forEach(function (fn) {
+                fn.call(self);
             });
 
             return this;
-        }
+        },
 
-        loop(loops) {
+        loop: function (loops) {
             this.loops = loops !== undefined ? loops : -1;
 
             return this;
-        }
+        },
 
-        previous(nb) {
-            let index = this._reverseIndex(this.index - (nb || 1), true);
-
-            if (index) {
-                this.index = index;
-                this.run();
-            }
-
-            return this;
-        }
-
-        next(nb) {
-            let index = this._reverseIndex(this.index + (nb || 1));
+        previous: function (nb) {
+            var index = this._reverseIndex(this.index - (nb || 1), true);
 
             if (index) {
                 this.index = index;
@@ -187,16 +179,29 @@
             }
 
             return this;
-        }
+        },
 
-        same() {
+        next: function (nb) {
+            var index = this._reverseIndex(this.index + (nb || 1));
+
+            if (index) {
+                this.index = index;
+                this.run();
+            }
+
+            return this;
+        },
+
+        same: function () {
             this.index -= 1;
             this.run();
 
             return this;
-        }
+        },
 
-        run() {
+        run: function () {
+            var step;
+
             if (!this.playing) {
                 return;
             }
@@ -217,74 +222,70 @@
                 }
             }
 
-            const go = () => {
-                let step = this.steps[this.index],
-                    steps = step;
-
-                if (typeof step === 'function') {
-                    this.concurrentSteps = 1;
-
-                    step.call(this, this._next.bind(this));
-                }
-
-                if (Array.isArray(steps)) {
-                    this.concurrentSteps = steps.length;
-
-                    steps.forEach((step) => {
-                        step.call(this, this._next.bind(this));
-                    });
-                }
-            };
-
             this.trigger('before');
 
-            if (this.async) {
-                setTimeout(go);
-            } else {
-                go();
+            step = this.steps[this.index];
+
+            if (typeof step === 'function') {
+                this.concurrentSteps = 1;
+
+                step.call(this, this._next.bind(this));
+            }
+
+            if (Array.isArray(step)) {
+                var steps = step;
+
+                this.concurrentSteps = steps.length;
+
+                steps.forEach(function (step) {
+                    step.call(this, this._next.bind(this));
+                });
             }
 
             return this;
-        }
+        },
 
-        _next(doms) {
-            let domCount = 0;
+        _next: function (doms) {
+            var self = this, domCount = 0;
 
-            let done = () => {
-                if (--this.concurrentSteps === 0) {
-                    this.index++;
-                    this.run();
-                    this.trigger('after');
+            var done = function () {
+                self.concurrentSteps--;
+
+                if (self.concurrentSteps === 0) {
+                    console.log('next');
+                    self.index++;
+                    self.run();
+                    self.trigger('after');
                 }
             };
 
             if (doms) {
                 doms = Array.isArray(doms) ? doms : [ doms ];
 
-                doms.forEach((dom) => {
-                    let callback = () => {
-                        dom.removeEventListener(this.animationEnd,  callback);
-                        dom.removeEventListener(this.transitionEnd, callback);
+                doms.forEach(function (dom) {
+                    var callback = function () {
+                        dom.removeEventListener(self.animationEnd,  callback);
+                        dom.removeEventListener(self.transitionEnd, callback);
 
-                        if (++domCount === doms.length) {
+                        if (domCount++ === doms.length - 1) {
                             done();
                         }
                     };
 
-                    dom.addEventListener(this.transitionEnd, callback, false);
-                    dom.addEventListener(this.animationEnd,  callback, false);
+                    dom.addEventListener(self.transitionEnd, callback, false);
+                    dom.addEventListener(self.animationEnd,  callback, false);
                 });
             } else {
                 done();
             }
 
             return this;
-        }
+        },
 
-        _reverseIndex(index, previous) {
-            let buffer;
+        _reverseIndex: function (index, previous) {
+            var buffer;
 
-            for (let i = 0; i < this.indexes.length; i++) {
+            for (var i = 0; i < this.indexes.length; i++) {
                 if ((previous && this.indexes[i] >= index) || (!previous && this.indexes[i] > index)) {
                     return buffer;
                 }
@@ -294,10 +295,10 @@
 
             return 0;
         }
-    }
+    };
 
     function getEndEventName (key) {
-        const map = {
+        var div, map = {
             animation: {
                 'animation': 'animationend',
                 '-o-animation': 'oAnimationEnd',
@@ -313,16 +314,18 @@
         };
 
         try {
-            let div = document.createElement('div');
-
-            for (let eventName in map[key]) {
-                if (typeof(div.style[eventName]) !== 'undefined') {
-                    return map[key][eventName];
-                }
-            }
+            div = document.createElement('div');
         } catch (e) {
             return null;
         }
+
+        for (var eventName in map[key]) {
+            if (typeof(div.style[eventName]) !== 'undefined') {
+                return map[key][eventName];
+            }
+        }
+
+        return null;
     }
 
     return Screenplay;

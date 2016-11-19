@@ -1,4 +1,4 @@
-# screenplay
+# Screenplay
 
 A tiny library to timeline functions
 

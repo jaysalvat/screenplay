@@ -93,10 +93,11 @@
 
     gulp.task('es6', function () {
         return gulp.src("./src/**/*.js")
-            .pipe(plugins.if(argv.dev, plugins.sourcemaps.init()))
+            .pipe(plugins.if(argv.dev, plugins.sourcemaps.init({ loadMaps: argv.dev })))
             .pipe(plugins.babel({
-                presets: ['es2015-script']
-            }))
+                presets: ['es2015-script'],
+                plugins: [ 'transform-object-assign' ]
+            }).on('error', gutil.log))
             .pipe(plugins.if(argv.dev, plugins.sourcemaps.write('maps')))
             .pipe(gulp.dest("./dist/"));
     });
@@ -117,32 +118,13 @@
             .pipe(gulp.dest('./dist/'));
     });
 
-    gulp.task('sass', function () {
-        return gulp.src("./src/sass/screenplay.sass")
-            .pipe(plugins.if(argv.dev, plugins.sourcemaps.init()))
-            .pipe(plugins.sass({
-                outputStyle: 'expanded',
-                indentWidth: 4
-            }).on('error', plugins.sass.logError))
-            .pipe(plugins.autoprefixer())
-            .pipe(plugins.if(argv.dev, plugins.sourcemaps.write('maps')))
-            .pipe(gulp.dest("./dist/"));
-    });
-
-    gulp.task('minify-css', function () {
-        return gulp.src('./dist/**/!(*.min.css).css')
-            .pipe(plugins.sourcemaps.init({ loadMaps: argv.dev }))
-            .pipe(plugins.cleanCss())
-            .pipe(plugins.rename({ suffix: '.min' }))
-            .pipe(plugins.sourcemaps.write('maps'))
-            .pipe(gulp.dest('./dist/'));
-    });
-
     gulp.task('header', function () {
         settings.banner.vars.pkg = getPackageJson();
 
         return gulp.src('./dist/*.js')
+            .pipe(plugins.sourcemaps.init({ loadMaps: argv.dev }))
             .pipe(plugins.header(settings.banner.content, settings.banner.vars ))
+            .pipe(plugins.sourcemaps.write('maps'))
             .pipe(gulp.dest('./dist/'));
     });
 
@@ -336,10 +318,8 @@
 
     gulp.task('build', sync([
         'clean',            // Remove /dist folder
-        'sass',             // Transpile SASS
         'es6',              // Transpile ES6
         'header',           // Add Comment Headers
-        'minify-css',       // Minify CSS
         'minify-js',        // Minify JS
     ],
     'building'));
