@@ -1,6 +1,6 @@
 /*!-----------------------------------------------------------------------------
- * screenplay — A tiny library to timeline functions
- * v0.0.1-1 - built 2016-11-19
+ * screenplay — A tiny Javascript library to timeline functions
+ * v0.0.1 - built 2016-11-19
  * Licensed under the MIT License.
  * http://screenplay.jaysalvat.com/
  * ----------------------------------------------------------------------------
@@ -270,7 +270,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     if (Array.isArray(steps)) {
                         _this2.concurrentSteps = steps.length;
-                        console.log('la');
+
                         steps.forEach(function (step) {
                             step.call(_this2, _this2._next.bind(_this2));
                         });

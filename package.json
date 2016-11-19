@@ -1,6 +1,6 @@
 {
   "name": "screenplay",
-  "version": "0.0.1-1",
+  "version": "0.0.1",
   "description": "A tiny Javascript library to timeline functions",
   "homepage": "http://screenplay.jaysalvat.com",
   "author": "Jay Salvat",
