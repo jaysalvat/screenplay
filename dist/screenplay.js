@@ -1,67 +1,93 @@
 /*!-----------------------------------------------------------------------------
  * screenplay — A tiny Javascript library to timeline functions
- * v0.0.1 - built 2016-11-19
+ * v0.0.1 - built 2016-11-21
  * Licensed under the MIT License.
  * http://screenplay.jaysalvat.com/
  * ----------------------------------------------------------------------------
  * Copyright (C) 2016 Jay Salvat
  * http://jaysalvat.com/
  * --------------------------------------------------------------------------*/
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-/* global define */
-
-(function (context, factory) {
-    'use strict';
-
-    if (typeof module !== 'undefined' && module.exports) {
-        module.exports = factory();
-    } else if (typeof define === 'function' && define.amd) {
-        define([], factory);
+(function (global, factory) {
+    if (typeof define === "function" && define.amd) {
+        define(['module', 'exports'], factory);
+    } else if (typeof exports !== "undefined") {
+        factory(module, exports);
     } else {
-        context.Screenplay = factory();
+        var mod = {
+            exports: {}
+        };
+        factory(mod, mod.exports);
+        global.Screenplay = mod.exports;
     }
-})(this, function () {
+})(this, function (module, exports) {
     'use strict';
+
+    Object.defineProperty(exports, "__esModule", {
+        value: true
+    });
+
+    function _classCallCheck(instance, Constructor) {
+        if (!(instance instanceof Constructor)) {
+            throw new TypeError("Cannot call a class as a function");
+        }
+    }
+
+    var _createClass = function () {
+        function defineProperties(target, props) {
+            for (var i = 0; i < props.length; i++) {
+                var descriptor = props[i];
+                descriptor.enumerable = descriptor.enumerable || false;
+                descriptor.configurable = true;
+                if ("value" in descriptor) descriptor.writable = true;
+                Object.defineProperty(target, descriptor.key, descriptor);
+            }
+        }
+
+        return function (Constructor, protoProps, staticProps) {
+            if (protoProps) defineProperties(Constructor.prototype, protoProps);
+            if (staticProps) defineProperties(Constructor, staticProps);
+            return Constructor;
+        };
+    }();
 
     var Screenplay = function () {
-        function Screenplay(settings) {
+        function Screenplay() {
+            var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
             _classCallCheck(this, Screenplay);
 
-            settings = _extends({}, {
-                async: true
-            }, settings);
+            var _settings$async = settings.async,
+                async = _settings$async === undefined ? true : _settings$async;
 
-            this.async = settings.async;
+
+            this.async = async;
             this.steps = [];
-            this.indexes = [];
-            this.markers = {};
             this.index = 0;
             this.loops = 1;
+            this.indexes = [];
+            this.markers = {};
             this.playing = false;
-            this.animationEnd = getEndEventName('animation');
-            this.transitionEnd = getEndEventName('transition');
+            this.animationEnd = getEventName('animation');
+            this.transitionEnd = getEventName('transition');
+            this.timer = null;
             this.events = {
                 'step': [],
                 'play': [],
-                'pause': [],
                 'stop': [],
                 'loop': [],
+                'pause': [],
                 'before': [],
                 'after': []
             };
-            this.timer = null;
             this.finale = function () {};
         }
 
         _createClass(Screenplay, [{
             key: 'play',
-            value: function play(loops) {
-                this.loops = loops ? loops : this.loops;
+            value: function play() {
+                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.loops;
+
+                this.loops = loops;
                 this.playing = true;
                 this.run();
 
@@ -91,8 +117,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }, {
             key: 'step',
-            value: function step(fn, repeat) {
-                repeat = repeat || 1;
+            value: function step(fn) {
+                var repeat = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
 
                 for (var i = 0; i < repeat; i++) {
                     this.steps.push(fn);
@@ -189,22 +215,26 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var _this = this;
 
                 this.events[key].forEach(function (fn) {
-                    fn.call(_this);
+                    return fn.call(_this);
                 });
 
                 return this;
             }
         }, {
             key: 'loop',
-            value: function loop(loops) {
-                this.loops = loops !== undefined ? loops : -1;
+            value: function loop() {
+                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
+
+                this.loops = loops;
 
                 return this;
             }
         }, {
             key: 'previous',
-            value: function previous(nb) {
-                var index = this._reverseIndex(this.index - (nb || 1), true);
+            value: function previous() {
+                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+                var index = this._reverseIndex(this.index - nb, true);
 
                 if (index) {
                     this.index = index;
@@ -215,8 +245,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }, {
             key: 'next',
-            value: function next(nb) {
-                var index = this._reverseIndex(this.index + (nb || 1));
+            value: function next() {
+                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+                var index = this._reverseIndex(this.index + nb);
 
                 if (index) {
                     this.index = index;
@@ -306,17 +338,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     doms = Array.isArray(doms) ? doms : [doms];
 
                     doms.forEach(function (dom) {
-                        var callback = function callback() {
-                            dom.removeEventListener(_this3.animationEnd, callback);
-                            dom.removeEventListener(_this3.transitionEnd, callback);
+                        var self = _this3;
+
+                        function callback() {
+                            dom.removeEventListener(self.animationEnd, callback, false);
+                            dom.removeEventListener(self.transitionEnd, callback, false);
 
                             if (++domCount === doms.length) {
                                 done();
                             }
-                        };
+                        }
 
-                        dom.addEventListener(_this3.transitionEnd, callback, false);
                         dom.addEventListener(_this3.animationEnd, callback, false);
+                        dom.addEventListener(_this3.transitionEnd, callback, false);
                     });
                 } else {
                     done();
@@ -333,7 +367,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (previous && this.indexes[i] >= index || !previous && this.indexes[i] > index) {
                         return buffer;
                     }
-
                     buffer = this.indexes[i];
                 }
 
@@ -344,7 +377,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return Screenplay;
     }();
 
-    function getEndEventName(key) {
+    function getEventName(key) {
         var map = {
             animation: {
                 'animation': 'animationend',
@@ -373,6 +406,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
     }
 
-    return Screenplay;
+    exports.default = Screenplay;
+    module.exports = exports['default'];
 });
+
+
 //# sourceMappingURL=maps/screenplay.js.map

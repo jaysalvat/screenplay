@@ -94,10 +94,7 @@
     gulp.task('es6', function () {
         return gulp.src("./src/**/*.js")
             .pipe(plugins.if(argv.dev, plugins.sourcemaps.init({ loadMaps: argv.dev })))
-            .pipe(plugins.babel({
-                presets: ['es2015-script'],
-                plugins: [ 'transform-object-assign' ]
-            }).on('error', gutil.log))
+            .pipe(plugins.babel().on('error', gutil.log))
             .pipe(plugins.if(argv.dev, plugins.sourcemaps.write('maps')))
             .pipe(gulp.dest("./dist/"));
     });
