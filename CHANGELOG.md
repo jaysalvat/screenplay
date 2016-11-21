@@ -4,6 +4,10 @@ A tiny Javascript library to timeline functions
 
 ## CHANGE LOG
 
+### screenplay 0.0.2 2016-11-21
+
+* Next now accepts Promise, Audio and Video
+
 ### Screenplay 0.0.1 2016-11-19
 
 First commit

@@ -1,6 +1,6 @@
 /*!-----------------------------------------------------------------------------
  * screenplay — A tiny Javascript library to timeline functions
- * v0.0.1 - built 2016-11-21
+ * v0.0.2 - built 2016-11-21
  * Licensed under the MIT License.
  * http://screenplay.jaysalvat.com/
  * ----------------------------------------------------------------------------
@@ -420,6 +420,4 @@
         return Screenplay;
     });
 });
-
-
 //# sourceMappingURL=maps/screenplay.bk.js.map

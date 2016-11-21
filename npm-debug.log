@@ -1,0 +1,139 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/usr/local/bin/node', '/usr/local/bin/npm', 'publish' ]
+2 info using npm@4.0.2
+3 info using node@v6.9.1
+4 verbose publish [ '.' ]
+5 silly cache add args [ '.', null ]
+6 verbose cache add spec .
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: '.',
+7 silly cache add   scope: null,
+7 silly cache add   escapedName: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: '.',
+7 silly cache add   spec: '/Users/jay/Sites/www/screenplay',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory /Users/jay/.npm/screenplay/0.0.1/package.tgz not in flight; packing
+9 verbose correctMkdir /Users/jay/.npm correctMkdir not in flight; initializing
+10 info lifecycle screenplay@0.0.1~prepublish: screenplay@0.0.1
+11 silly lifecycle screenplay@0.0.1~prepublish: no script for prepublish, continuing
+12 info lifecycle screenplay@0.0.1~prepare: screenplay@0.0.1
+13 silly lifecycle screenplay@0.0.1~prepare: no script for prepare, continuing
+14 verbose tar pack [ '/Users/jay/.npm/screenplay/0.0.1/package.tgz',
+14 verbose tar pack   '/Users/jay/Sites/www/screenplay' ]
+15 verbose tarball /Users/jay/.npm/screenplay/0.0.1/package.tgz
+16 verbose folder /Users/jay/Sites/www/screenplay
+17 verbose addLocalTarball adding from inside cache /Users/jay/.npm/screenplay/0.0.1/package.tgz
+18 verbose correctMkdir /Users/jay/.npm correctMkdir not in flight; initializing
+19 silly cache afterAdd screenplay@0.0.1
+20 verbose afterAdd /Users/jay/.npm/screenplay/0.0.1/package/package.json not in flight; writing
+21 verbose correctMkdir /Users/jay/.npm correctMkdir not in flight; initializing
+22 verbose afterAdd /Users/jay/.npm/screenplay/0.0.1/package/package.json written
+23 silly publish { name: 'screenplay',
+23 silly publish   version: '0.0.1',
+23 silly publish   description: 'A tiny Javascript library to timeline functions',
+23 silly publish   homepage: 'https://github.com/jaysalvat/screenplay',
+23 silly publish   author: { name: 'Jay Salvat' },
+23 silly publish   license: 'MIT',
+23 silly publish   main: 'dist/screenplay.js',
+23 silly publish   scripts:
+23 silly publish    { test: 'mocha ./test/tests.js',
+23 silly publish      'test-watch': 'mocha ./test/ --watch' },
+23 silly publish   repository:
+23 silly publish    { type: 'git',
+23 silly publish      url: 'git+https://github.com/jaysalvat/screenplay.git' },
+23 silly publish   keywords: [],
+23 silly publish   devDependencies:
+23 silly publish    { 'babel-plugin-add-module-exports': '^0.2.1',
+23 silly publish      'babel-plugin-transform-es2015-modules-umd': '^6.18.0',
+23 silly publish      'babel-preset-es2015-script': '^1.1.0',
+23 silly publish      chai: '^3.5.0',
+23 silly publish      del: '^2.2.0',
+23 silly publish      gulp: '^3.9.1',
+23 silly publish      'gulp-autoprefixer': '^3.1.0',
+23 silly publish      'gulp-babel': '^6.1.2',
+23 silly publish      'gulp-bump': '^2.1.0',
+23 silly publish      'gulp-header': '^1.8.2',
+23 silly publish      'gulp-if': '^2.0.1',
+23 silly publish      'gulp-jshint': '^2.0.1',
+23 silly publish      'gulp-load-plugins': '^1.2.4',
+23 silly publish      'gulp-mocha': '^3.0.1',
+23 silly publish      'gulp-rename': '^1.2.0',
+23 silly publish      'gulp-replace': '^0.5.0',
+23 silly publish      'gulp-sourcemaps': '^2.2.0',
+23 silly publish      'gulp-sync': '^0.1.4',
+23 silly publish      'gulp-uglify': '^2.0.0',
+23 silly publish      'gulp-util': '^3.0.2',
+23 silly publish      'gulp-zip': '^3.2.0',
+23 silly publish      jshint: '^2.9.2',
+23 silly publish      mocha: '^3.1.2',
+23 silly publish      yargs: '^6.3.0' },
+23 silly publish   dependencies: { 'babel-plugin-transform-object-assign': '^6.8.0' },
+23 silly publish   readme: '# Screenplay\n\n[![Build Status](https://travis-ci.org/jaysalvat/screenplay.svg?branch=master)](https://travis-ci.org/jaysalvat/screenplay)\n[![NPM version](https://badge.fury.io/js/screenplay.svg)](http://badge.fury.io/js/screenplay)\n[![Bower version](https://badge.fury.io/bo/screenplay.svg)](http://badge.fury.io/bo/screenplay)\n\nA tiny Javascript library to timeline functions\n\n## Install\n\nDownload latest [Screenplay](http://jaysalvat.github.io/screenplay/releases/latest/screenplay.zip) and include it to your page.\n\n```html\n<script src="/path/to/screenplay/dist/screenplay.min.js"></script>\n```\n\n### Bower install\n\n    bower install --save screenplay\n\n### NPM install\n\n    npm install --save screenplay\n\n### Yarn install\n\n    yarn add screenplay\n\nScreenplay is UMD and ES6/Webpack/Browserify friendly.\n\n```javascript\nimport screenplay from \'screenplay\';\n```\n',
+23 silly publish   readmeFilename: 'README.md',
+23 silly publish   gitHead: '4f59894dcd7cf1706cc2a4723aa5b6abd165a714',
+23 silly publish   bugs: { url: 'https://github.com/jaysalvat/screenplay/issues' },
+23 silly publish   _id: 'screenplay@0.0.1',
+23 silly publish   _shasum: '74b3372c2ac1eb187637afb96843e3da6393c455',
+23 silly publish   _from: '.' }
+24 info lifecycle screenplay@0.0.1~prepublishOnly: screenplay@0.0.1
+25 silly lifecycle screenplay@0.0.1~prepublishOnly: no script for prepublishOnly, continuing
+26 verbose getPublishConfig undefined
+27 silly mapToRegistry name screenplay
+28 silly mapToRegistry using default registry
+29 silly mapToRegistry registry https://registry.npmjs.org/
+30 silly mapToRegistry data Result {
+30 silly mapToRegistry   raw: 'screenplay',
+30 silly mapToRegistry   scope: null,
+30 silly mapToRegistry   escapedName: 'screenplay',
+30 silly mapToRegistry   name: 'screenplay',
+30 silly mapToRegistry   rawSpec: '',
+30 silly mapToRegistry   spec: 'latest',
+30 silly mapToRegistry   type: 'tag' }
+31 silly mapToRegistry uri https://registry.npmjs.org/screenplay
+32 verbose publish registryBase https://registry.npmjs.org/
+33 silly publish uploading /Users/jay/.npm/screenplay/0.0.1/package.tgz
+34 verbose request uri https://registry.npmjs.org/screenplay
+35 verbose request sending authorization for write operation
+36 info attempt registry request try #1 at 18:12:22
+37 verbose request using bearer token for auth
+38 verbose request id 227acf76a419235e
+39 http request PUT https://registry.npmjs.org/screenplay
+40 http 403 https://registry.npmjs.org/screenplay
+41 verbose headers { 'content-type': 'application/json',
+41 verbose headers   'cache-control': 'max-age=300',
+41 verbose headers   'content-length': '95',
+41 verbose headers   'accept-ranges': 'bytes',
+41 verbose headers   date: 'Mon, 21 Nov 2016 17:12:27 GMT',
+41 verbose headers   via: '1.1 varnish',
+41 verbose headers   connection: 'keep-alive',
+41 verbose headers   'x-served-by': 'cache-cdg8725-CDG',
+41 verbose headers   'x-cache': 'MISS',
+41 verbose headers   'x-cache-hits': '0',
+41 verbose headers   'x-timer': 'S1479748344.629829,VS0,VE2826',
+41 verbose headers   vary: 'Accept-Encoding' }
+42 verbose request invalidating /Users/jay/.npm/registry.npmjs.org/screenplay on PUT
+43 error publish Failed PUT 403
+44 verbose stack Error: "You cannot publish over the previously published version 0.0.1." : screenplay
+44 verbose stack     at makeError (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:302:12)
+44 verbose stack     at CachingRegistryClient.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:290:14)
+44 verbose stack     at Request._callback (/usr/local/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:210:14)
+44 verbose stack     at Request.self.callback (/usr/local/lib/node_modules/npm/node_modules/request/request.js:186:22)
+44 verbose stack     at emitTwo (events.js:106:13)
+44 verbose stack     at Request.emit (events.js:191:7)
+44 verbose stack     at Request.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1081:10)
+44 verbose stack     at emitOne (events.js:96:13)
+44 verbose stack     at Request.emit (events.js:188:7)
+44 verbose stack     at IncomingMessage.<anonymous> (/usr/local/lib/node_modules/npm/node_modules/request/request.js:1001:12)
+45 verbose statusCode 403
+46 verbose pkgid screenplay
+47 verbose cwd /Users/jay/Sites/www/screenplay
+48 error Darwin 16.1.0
+49 error argv "/usr/local/bin/node" "/usr/local/bin/npm" "publish"
+50 error node v6.9.1
+51 error npm  v4.0.2
+52 error code E403
+53 error "You cannot publish over the previously published version 0.0.1." : screenplay
+54 error If you need help, you may report this error at:
+54 error     <https://github.com/npm/npm/issues>
+55 verbose exit [ 1, true ]

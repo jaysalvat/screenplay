@@ -6,12 +6,6 @@
 
 A tiny Javascript library to timeline functions
 
-**Home:**
-[http://screenplay.jaysalvat.com/](http://screenplay.jaysalvat.com/)
-
-**Documentation:**
-[http://screenplay.jaysalvat.com/documentation/](http://screenplay.jaysalvat.com/documentation/)
-
 ## Install
 
 Download latest [Screenplay](http://jaysalvat.github.io/screenplay/releases/latest/screenplay.zip) and include it to your page.
