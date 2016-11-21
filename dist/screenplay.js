@@ -321,10 +321,10 @@
             }
         }, {
             key: '_next',
-            value: function _next(doms) {
+            value: function _next(elements) {
                 var _this3 = this;
 
-                var domCount = 0;
+                var elementCount = 0;
 
                 var done = function done() {
                     if (--_this3.concurrentSteps === 0) {
@@ -334,23 +334,34 @@
                     }
                 };
 
-                if (doms) {
-                    doms = Array.isArray(doms) ? doms : [doms];
+                if (elements) {
+                    elements = Array.isArray(elements) ? elements : [elements];
 
-                    doms.forEach(function (dom) {
+                    elements.forEach(function (element) {
                         var self = _this3;
 
                         function callback() {
-                            dom.removeEventListener(self.animationEnd, callback, false);
-                            dom.removeEventListener(self.transitionEnd, callback, false);
+                            element.removeEventListener(self.animationEnd, callback, false);
+                            element.removeEventListener(self.transitionEnd, callback, false);
+                            element.removeEventListener("ended", callback, false);
 
-                            if (++domCount === doms.length) {
+                            if (++elementCount === elements.length) {
                                 done();
                             }
                         }
 
-                        dom.addEventListener(_this3.animationEnd, callback, false);
-                        dom.addEventListener(_this3.transitionEnd, callback, false);
+                        if (typeof HTMLElement !== 'undefined' && element instanceof HTMLElement) {
+                            element.addEventListener(_this3.animationEnd, callback, false);
+                            element.addEventListener(_this3.transitionEnd, callback, false);
+
+                            if (element.tagName === 'AUDIO' || element.tagName === 'VIDEO') {
+                                element.addEventListener("ended", callback, false);
+                            }
+                        }
+
+                        if (typeof element.then === 'function') {
+                            element.then(done, done);
+                        }
                     });
                 } else {
                     done();

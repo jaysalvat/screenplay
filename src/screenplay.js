@@ -228,8 +228,8 @@ class Screenplay {
         return this;
     }
 
-    _next(doms) {
-        let domCount = 0;
+    _next(elements) {
+        let elementCount = 0;
 
         let done = () => {
             if (--this.concurrentSteps === 0) {
@@ -239,23 +239,34 @@ class Screenplay {
             }
         };
 
-        if (doms) {
-            doms = Array.isArray(doms) ? doms : [ doms ];
+        if (elements) {
+            elements = Array.isArray(elements) ? elements : [ elements ];
 
-            doms.forEach((dom) => {
+            elements.forEach((element) => {
                 let self = this;
 
                 function callback () {
-                    dom.removeEventListener(self.animationEnd,  callback, false);
-                    dom.removeEventListener(self.transitionEnd, callback, false);
+                    element.removeEventListener(self.animationEnd,  callback, false);
+                    element.removeEventListener(self.transitionEnd, callback, false);
+                    element.removeEventListener("ended", callback, false);
 
-                    if (++domCount === doms.length) {
+                    if (++elementCount === elements.length) {
                         done();
                     }
                 }
 
-                dom.addEventListener(this.animationEnd,  callback, false);
-                dom.addEventListener(this.transitionEnd, callback, false);
+                if (typeof HTMLElement !== 'undefined' && element instanceof HTMLElement) {
+                    element.addEventListener(this.animationEnd,  callback, false);
+                    element.addEventListener(this.transitionEnd, callback, false);
+
+                    if (element.tagName === 'AUDIO' || element.tagName === 'VIDEO') {
+                        element.addEventListener("ended", callback, false);
+                    }
+                }
+
+                if (typeof element.then === 'function') {
+                    element.then(done, done);
+                }
             });
         } else {
             done();

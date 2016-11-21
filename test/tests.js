@@ -20,28 +20,139 @@ describe("Screenplay tests", function () {
         }).to.not.throw(Error);
     });
 
-    it("should return 'ABCABC", function () {
-        let test = '';
+    describe("Play()", function () {
+        it("should return 'ABCABC' with play(2)", function () {
+            let test = '';
+            let screenplay = new Screenplay({ async: false });
 
-        let screenplay = new Screenplay({
-            async: false
+            screenplay
+                .step(function (next) {
+                    test += 'A';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'B';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'C';
+                    next();
+                })
+                .play(2);
+
+            expect(test).to.be.equal('ABCABC');
+        });
+    });
+
+    describe("loop()", function () {
+        it("should return 'ABCABCABC' with loop(3)", function () {
+            let test = '';
+            let screenplay = new Screenplay({ async: false });
+
+            screenplay
+                .step(function (next) {
+                    test += 'A';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'B';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'C';
+                    next();
+                })
+                .loop(3)
+                .play();
+
+            expect(test).to.be.equal('ABCABCABC');
+        });
+    });
+
+    describe("end()", function () {
+        it("should return 'ABCABCD' with end()", function () {
+            let test = '';
+            let screenplay = new Screenplay({ async: false });
+
+            screenplay
+                .step(function (next) {
+                    test += 'A';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'B';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'C';
+                    next();
+                })
+                .end(function () {
+                    test += 'D';
+                })
+                .loop(2)
+                .play();
+
+            expect(test).to.be.equal('ABCABCD');
+        });
+    });
+
+    describe("Next() With Promise", function () {
+        it("should return 'ABC'", function (done) {
+            let test = '';
+            let screenplay = new Screenplay();
+
+            screenplay
+                .step(function (next) {
+                    var promise = new Promise(function (resolve) {
+                        setTimeout(function () {
+                            test += 'A';
+                            resolve();
+                        }, 1);
+                    });
+                    next(promise);
+                })
+                .step(function (next) {
+                    var promise = new Promise(function (resolve) {
+                        setTimeout(function () {
+                            test += 'B';
+                            resolve();
+                        }, 1);
+                    });
+                    next(promise);
+                })
+                .end(function () {
+                    expect(test).to.be.equal('AB');
+                    done();
+                })
+                .play();
         });
 
-        screenplay
-            .step(function (next) {
-                test += 'A';
-                next();
-            })
-            .step(function (next) {
-                test += 'B';
-                next();
-            })
-            .step(function (next) {
-                test += 'C';
-                next();
-            })
-            .play(2);
+        it("should return 'AB'", function (done) {
+            let test = '';
+            let screenplay = new Screenplay();
 
-        expect(test).to.be.equal('ABCABC');
+            screenplay
+                .step(function (next) {
+                    var promise1 = new Promise(function (resolve) {
+                        setTimeout(function () {
+                            test += 'A';
+                            resolve();
+                        }, 1);
+                    });
+                    var promise2 = new Promise(function (resolve) {
+                        setTimeout(function () {
+                            test += 'B';
+                            resolve();
+                        }, 1);
+                    });
+                    next([ promise1, promise2 ]);
+                })
+                .end(function () {
+                    expect(test).to.be.equal('AB');
+                    done();
+                })
+                .play();
+        });
     });
 });
