@@ -1,6 +1,6 @@
 /*!-----------------------------------------------------------------------------
  * screenplay — A tiny Javascript library to timeline functions
- * v0.0.2 - built 2016-11-21
+ * v0.0.2 - built 2016-11-27
  * Licensed under the MIT License.
  * http://screenplay.jaysalvat.com/
  * ----------------------------------------------------------------------------
@@ -52,21 +52,19 @@
 
     var Screenplay = function () {
         function Screenplay() {
-            var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
             _classCallCheck(this, Screenplay);
 
-            var _settings$async = settings.async,
-                async = _settings$async === undefined ? true : _settings$async;
+            // settings = {}
+            //let {} = settings;
 
-
-            this.async = async;
             this.steps = [];
+            this.waits = [];
             this.index = 0;
             this.loops = 1;
             this.indexes = [];
             this.markers = {};
             this.playing = false;
+            this.started = false;
             this.animationEnd = getEventName('animation');
             this.transitionEnd = getEventName('transition');
             this.timer = null;
@@ -88,18 +86,30 @@
                 var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.loops;
 
                 this.loops = loops;
-                this.playing = true;
-                this.run();
 
-                return this.trigger('play');
+                if (!this.playing) {
+                    this.playing = true;
+
+                    if (this.started) {
+                        this.next();
+                    } else {
+                        this._run();
+                    }
+
+                    this._trigger('play');
+                }
+
+                return this;
             }
         }, {
             key: 'pause',
             value: function pause() {
-                this.playing = false;
-                this.run();
+                if (this.playing) {
+                    this.playing = false;
+                    this._trigger('pause');
+                }
 
-                return this.trigger('pause');
+                return this;
             }
         }, {
             key: 'toggle',
@@ -113,7 +123,7 @@
                 this.playing = false;
                 this.finale.call(this);
 
-                return this.trigger('stop');
+                return this._trigger('stop');
             }
         }, {
             key: 'step',
@@ -122,7 +132,6 @@
 
                 for (var i = 0; i < repeat; i++) {
                     this.steps.push(fn);
-                    this.indexes.push(this.steps.length - 1);
                 }
 
                 return this;
@@ -130,26 +139,13 @@
         }, {
             key: 'wait',
             value: function wait(time) {
-                this.steps.push(function (next) {
-                    clearTimeout(this.timer);
-
-                    this.timer = setTimeout(function () {
-                        next();
-                    }, time);
-                });
+                this.waits[this.steps.length - 1] = time;
 
                 return this;
             }
         }, {
-            key: 'repeat',
-            value: function repeat(_repeat) {
-                var last = this.steps[this.steps.length - 1];
-
-                return this.step(last, _repeat);
-            }
-        }, {
-            key: 'end',
-            value: function end(fn) {
+            key: 'done',
+            value: function done(fn) {
                 this.finale = fn;
 
                 return this;
@@ -158,10 +154,8 @@
             key: 'rewind',
             value: function rewind() {
                 this.index = 0;
-                this.playing = true;
-                this.run();
 
-                return this;
+                return this._run();
             }
         }, {
             key: 'marker',
@@ -176,18 +170,48 @@
                 if (typeof marker === 'string') {
                     if (this.markers[marker]) {
                         this.index = this.markers[marker];
-                        this.run();
                     }
                 }
 
                 if (typeof marker === 'number') {
-                    if (this.indexes[marker]) {
-                        this.index = this.indexes[marker];
-                        this.run();
+                    if (this.steps[marker]) {
+                        this.index = this.steps[marker];
                     }
                 }
 
+                return this._run();
+            }
+        }, {
+            key: 'loop',
+            value: function loop() {
+                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
+
+                this.loops = loops;
+
                 return this;
+            }
+        }, {
+            key: 'previous',
+            value: function previous() {
+                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+                this.index = this.index - nb;
+
+                return this._run();
+            }
+        }, {
+            key: 'next',
+            value: function next() {
+                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+                this.index = this.index + nb;
+
+                return this._run();
+            }
+        }, {
+            key: 'same',
+            value: function same() {
+                return this._run();
             }
         }, {
             key: 'on',
@@ -210,8 +234,8 @@
                 return this;
             }
         }, {
-            key: 'trigger',
-            value: function trigger(key) {
+            key: '_trigger',
+            value: function _trigger(key) {
                 var _this = this;
 
                 this.events[key].forEach(function (fn) {
@@ -221,61 +245,17 @@
                 return this;
             }
         }, {
-            key: 'loop',
-            value: function loop() {
-                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
-
-                this.loops = loops;
-
-                return this;
-            }
-        }, {
-            key: 'previous',
-            value: function previous() {
-                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-
-                var index = this._reverseIndex(this.index - nb, true);
-
-                if (index) {
-                    this.index = index;
-                    this.run();
-                }
-
-                return this;
-            }
-        }, {
-            key: 'next',
-            value: function next() {
-                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-
-                var index = this._reverseIndex(this.index + nb);
-
-                if (index) {
-                    this.index = index;
-                    this.run();
-                }
-
-                return this;
-            }
-        }, {
-            key: 'same',
-            value: function same() {
-                this.index -= 1;
-                this.run();
-
-                return this;
-            }
-        }, {
-            key: 'run',
-            value: function run() {
+            key: '_run',
+            value: function _run() {
                 var _this2 = this;
 
-                if (!this.playing) {
-                    return;
+                if (!this.started) {
+                    this.started = true;
                 }
 
                 if (this.index < 0) {
                     this.index = 0;
+                    return;
                 }
 
                 if (this.index >= this.steps.length) {
@@ -290,7 +270,9 @@
                     }
                 }
 
-                var go = function go() {
+                setTimeout(function () {
+                    _this2._trigger('before');
+
                     var step = _this2.steps[_this2.index],
                         steps = step;
 
@@ -307,16 +289,7 @@
                             step.call(_this2, _this2._next.bind(_this2));
                         });
                     }
-                };
-
-                this.trigger('before');
-
-                if (this.async) {
-                    setTimeout(go);
-                } else {
-                    go();
-                }
-
+                });
                 return this;
             }
         }, {
@@ -328,9 +301,13 @@
 
                 var done = function done() {
                     if (--_this3.concurrentSteps === 0) {
-                        _this3.index++;
-                        _this3.run();
-                        _this3.trigger('after');
+                        if (_this3.playing) {
+                            setTimeout(function () {
+                                _this3.index++;
+                                _this3._run();
+                                _this3._trigger('after');
+                            }, _this3.waits[_this3.index]);
+                        }
                     }
                 };
 
@@ -369,20 +346,6 @@
 
                 return this;
             }
-        }, {
-            key: '_reverseIndex',
-            value: function _reverseIndex(index, previous) {
-                var buffer = void 0;
-
-                for (var i = 0; i < this.indexes.length; i++) {
-                    if (previous && this.indexes[i] >= index || !previous && this.indexes[i] > index) {
-                        return buffer;
-                    }
-                    buffer = this.indexes[i];
-                }
-
-                return 0;
-            }
         }]);
 
         return Screenplay;
@@ -420,4 +383,6 @@
     exports.default = Screenplay;
     module.exports = exports['default'];
 });
+
+
 //# sourceMappingURL=maps/screenplay.js.map

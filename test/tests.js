@@ -23,7 +23,7 @@ describe("Screenplay tests", function () {
     describe("Play()", function () {
         it("should return 'ABCABC' with play(2)", function () {
             let test = '';
-            let screenplay = new Screenplay({ async: false });
+            let screenplay = new Screenplay();
 
             screenplay
                 .step(function (next) {
@@ -38,16 +38,17 @@ describe("Screenplay tests", function () {
                     test += 'C';
                     next();
                 })
-                .play(2);
-
-            expect(test).to.be.equal('ABCABC');
+                .play(2)
+                .done(function () {
+                    expect(test).to.be.equal('ABCABC');
+                });
         });
     });
 
     describe("loop()", function () {
         it("should return 'ABCABCABC' with loop(3)", function () {
             let test = '';
-            let screenplay = new Screenplay({ async: false });
+            let screenplay = new Screenplay();
 
             screenplay
                 .step(function (next) {
@@ -63,37 +64,10 @@ describe("Screenplay tests", function () {
                     next();
                 })
                 .loop(3)
-                .play();
-
-            expect(test).to.be.equal('ABCABCABC');
-        });
-    });
-
-    describe("end()", function () {
-        it("should return 'ABCABCD' with end()", function () {
-            let test = '';
-            let screenplay = new Screenplay({ async: false });
-
-            screenplay
-                .step(function (next) {
-                    test += 'A';
-                    next();
-                })
-                .step(function (next) {
-                    test += 'B';
-                    next();
-                })
-                .step(function (next) {
-                    test += 'C';
-                    next();
-                })
-                .end(function () {
-                    test += 'D';
-                })
-                .loop(2)
-                .play();
-
-            expect(test).to.be.equal('ABCABCD');
+                .play()
+                .done(function () {
+                    expect(test).to.be.equal('ABCABCABC');
+                });
         });
     });
 
@@ -121,7 +95,7 @@ describe("Screenplay tests", function () {
                     });
                     next(promise);
                 })
-                .end(function () {
+                .done(function () {
                     expect(test).to.be.equal('AB');
                     done();
                 })
@@ -148,7 +122,7 @@ describe("Screenplay tests", function () {
                     });
                     next([ promise1, promise2 ]);
                 })
-                .end(function () {
+                .done(function () {
                     expect(test).to.be.equal('AB');
                     done();
                 })
