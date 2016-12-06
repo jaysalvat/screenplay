@@ -1,6 +1,6 @@
 /*!-----------------------------------------------------------------------------
  * screenplay — A tiny Javascript library to timeline functions
- * v0.0.2 - built 2016-11-27
+ * v0.0.2 - built 2016-12-06
  * Licensed under the MIT License.
  * http://screenplay.jaysalvat.com/
  * ----------------------------------------------------------------------------
@@ -52,19 +52,30 @@
 
     var Screenplay = function () {
         function Screenplay() {
+            var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
             _classCallCheck(this, Screenplay);
 
-            // settings = {}
-            //let {} = settings;
+            var _settings$direction = settings.direction,
+                direction = _settings$direction === undefined ? 1 : _settings$direction,
+                _settings$loops = settings.loops,
+                loops = _settings$loops === undefined ? 1 : _settings$loops,
+                _settings$loopBackwar = settings.loopBackward,
+                loopBackward = _settings$loopBackwar === undefined ? false : _settings$loopBackwar;
+
 
             this.steps = [];
             this.waits = [];
             this.index = 0;
-            this.loops = 1;
+            this.loops = loops;
+            this.loopBackward = loopBackward;
+            this.loopBuffer = loops;
+            this.dir = direction;
             this.indexes = [];
             this.markers = {};
             this.playing = false;
             this.started = false;
+            this.running = false;
             this.animationEnd = getEventName('animation');
             this.transitionEnd = getEventName('transition');
             this.timer = null;
@@ -72,6 +83,7 @@
                 'step': [],
                 'play': [],
                 'stop': [],
+                'start': [],
                 'loop': [],
                 'pause': [],
                 'before': [],
@@ -81,16 +93,32 @@
         }
 
         _createClass(Screenplay, [{
+            key: 'stop',
+            value: function stop() {
+                if (this.started) {
+                    this.started = false;
+                    this.running = false;
+                    this.playing = false;
+                    this.finale.call(this);
+                    this._trigger('stop');
+                }
+
+                return this;
+            }
+        }, {
             key: 'play',
             value: function play() {
                 var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : this.loops;
 
                 this.loops = loops;
+                this.loopBuffer = loops;
 
                 if (!this.playing) {
                     this.playing = true;
+                    this.started = true;
+                    this.running = false;
 
-                    if (this.started) {
+                    if (this.running) {
                         this.next();
                     } else {
                         this._run();
@@ -117,13 +145,43 @@
                 return this.playing ? this.pause() : this.play();
             }
         }, {
-            key: 'stop',
-            value: function stop() {
-                this.loops = 1;
-                this.playing = false;
-                this.finale.call(this);
+            key: 'previous',
+            value: function previous() {
+                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
-                return this._trigger('stop');
+                if (this.started) {
+                    this.index = this.index - (nb + 1) * this.dir;
+                    this._run();
+                }
+
+                return this;
+            }
+        }, {
+            key: 'next',
+            value: function next() {
+                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+                if (this.started) {
+                    this.index = this.index + (nb - 1) * this.dir;
+                    this._run();
+                }
+
+                return this;
+            }
+        }, {
+            key: 'same',
+            value: function same() {
+                this.index = this.index - 1 * this.dir;
+                this._run();
+
+                return this;
+            }
+        }, {
+            key: 'rewind',
+            value: function rewind() {
+                this.index = this.dir === -1 ? this.steps.length - 1 : 0;
+
+                return this._run();
             }
         }, {
             key: 'step',
@@ -144,6 +202,31 @@
                 return this;
             }
         }, {
+            key: 'index',
+            value: function index(_index) {
+                if (_index === undefined) {
+                    return this.index;
+                }
+                this.index = _index;
+
+                return this;
+            }
+        }, {
+            key: 'direction',
+            value: function direction(_direction) {
+                if (_direction === undefined) {
+                    return this.dir;
+                }
+                this.dir = _direction;
+
+                return this;
+            }
+        }, {
+            key: 'reverse',
+            value: function reverse() {
+                return this.direction(this.dir * -1);
+            }
+        }, {
             key: 'done',
             value: function done(fn) {
                 this.finale = fn;
@@ -151,11 +234,16 @@
                 return this;
             }
         }, {
-            key: 'rewind',
-            value: function rewind() {
-                this.index = 0;
+            key: 'loop',
+            value: function loop() {
+                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
+                var loopBackward = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.loopBackward;
 
-                return this._run();
+                this.loops = loops;
+                this.loopBackward = loopBackward;
+                this.loopBuffer = loops;
+
+                return this;
             }
         }, {
             key: 'marker',
@@ -179,38 +267,6 @@
                     }
                 }
 
-                return this._run();
-            }
-        }, {
-            key: 'loop',
-            value: function loop() {
-                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
-
-                this.loops = loops;
-
-                return this;
-            }
-        }, {
-            key: 'previous',
-            value: function previous() {
-                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-
-                this.index = this.index - nb;
-
-                return this._run();
-            }
-        }, {
-            key: 'next',
-            value: function next() {
-                var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-
-                this.index = this.index + nb;
-
-                return this._run();
-            }
-        }, {
-            key: 'same',
-            value: function same() {
                 return this._run();
             }
         }, {
@@ -249,32 +305,48 @@
             value: function _run() {
                 var _this2 = this;
 
+                //console.log('run');
                 if (!this.started) {
-                    this.started = true;
-                }
-
-                if (this.index < 0) {
-                    this.index = 0;
                     return;
                 }
 
-                if (this.index >= this.steps.length) {
-                    this.index = 0;
+                this.running = true;
 
+                if (this.index < 0) {
                     if (this.loops !== -1) {
-                        this.loops--;
+                        if (this.dir === -1 || this.dir === 1 && this.loopBackward) {
+                            this.index = this.steps.length - 1;
+                            this.loops = this.loops + this.dir;
+                        } else {
+                            return this.stop();
+                        }
                     }
 
-                    if (this.loops === 0) {
+                    if (this.loops === 0 || this.loops > this.loopBuffer) {
+                        return this.stop();
+                    }
+                }
+
+                if (this.index >= this.steps.length) {
+                    if (this.loops !== -1) {
+                        if (this.dir === 1 || this.dir === -1 && this.loopBackward) {
+                            this.index = 0;
+                            this.loops = this.loops - this.dir;
+                        } else {
+                            return this.stop();
+                        }
+                    }
+
+                    if (this.loops === 0 || this.loops > this.loopBuffer) {
                         return this.stop();
                     }
                 }
 
                 setTimeout(function () {
-                    _this2._trigger('before');
-
                     var step = _this2.steps[_this2.index],
                         steps = step;
+
+                    _this2._trigger('before');
 
                     if (typeof step === 'function') {
                         _this2.concurrentSteps = 1;
@@ -289,7 +361,10 @@
                             step.call(_this2, _this2._next.bind(_this2));
                         });
                     }
+
+                    _this2.index = _this2.index + _this2.dir;
                 });
+
                 return this;
             }
         }, {
@@ -300,14 +375,19 @@
                 var elementCount = 0;
 
                 var done = function done() {
-                    if (--_this3.concurrentSteps === 0) {
-                        if (_this3.playing) {
-                            setTimeout(function () {
-                                _this3.index++;
-                                _this3._run();
-                                _this3._trigger('after');
-                            }, _this3.waits[_this3.index]);
-                        }
+                    if (--_this3.concurrentSteps <= 0) {
+                        clearTimeout(_this3.timer);
+
+                        _this3.timer = setTimeout(function () {
+                            if (!_this3.playing) {
+                                return;
+                            }
+
+                            // this.index = this.index + this.dir;
+                            _this3._run();
+                            // this.next();
+                            _this3._trigger('after');
+                        }, _this3.waits[_this3.index]);
                     }
                 };
 
