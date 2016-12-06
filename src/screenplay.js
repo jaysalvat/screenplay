@@ -3,6 +3,7 @@
 class Screenplay {
     constructor (settings = {}) {
         let {
+            async = false,
             direction = 1,
             loops = 1,
             loopBackward = false,
@@ -12,6 +13,7 @@ class Screenplay {
         this.waits = [];
         this.index = 0;
         this.loops = loops;
+        this.async = async;
         this.loopBackward = loopBackward;
         this.loopBuffer = loops;
         this.dir = direction;
@@ -52,16 +54,18 @@ class Screenplay {
         this.loops = loops;
         this.loopBuffer = loops;
 
+        if (!this.started) {
+            if (this.dir === -1) {
+                this.index = this.steps.length - 1;
+            }
+        }
+
         if (!this.playing) {
             this.playing = true;
             this.started = true;
             this.running = false;
 
-            if (this.running) {
-                this.next();
-            } else {
-                this._run();
-            }
+            this._run();
 
             this._trigger('play');
         }
@@ -208,7 +212,6 @@ class Screenplay {
     }
 
     _run() {
-        //console.log('run');
         if (!this.started) {
             return;
         }
@@ -217,6 +220,7 @@ class Screenplay {
 
         if (this.index < 0) {
             if (this.loops !== -1) {
+                // if (this.dir === -1 || (this.dir === 1 && this.loopBackward)) {
                 if (this.dir === -1 || (this.dir === 1 && this.loopBackward)) {
                     this.index = this.steps.length - 1;
                     this.loops = this.loops + this.dir;
@@ -245,7 +249,7 @@ class Screenplay {
             }
         }
 
-        setTimeout(() => {
+        let go = () => {
             let step = this.steps[this.index],
                 steps = step;
 
@@ -266,7 +270,13 @@ class Screenplay {
             }
 
             this.index = this.index + this.dir;
-        });
+        };
+
+        if (this.async) {
+            setTimeout(go);
+        } else {
+            go();
+        }
 
         return this;
     }
@@ -282,10 +292,7 @@ class Screenplay {
                     if (!this.playing) {
                         return;
                     }
-
-                    // this.index = this.index + this.dir;
                     this._run();
-                    // this.next();
                     this._trigger('after');
                 }, this.waits[this.index]);
             }

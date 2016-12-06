@@ -56,7 +56,9 @@
 
             _classCallCheck(this, Screenplay);
 
-            var _settings$direction = settings.direction,
+            var _settings$async = settings.async,
+                async = _settings$async === undefined ? false : _settings$async,
+                _settings$direction = settings.direction,
                 direction = _settings$direction === undefined ? 1 : _settings$direction,
                 _settings$loops = settings.loops,
                 loops = _settings$loops === undefined ? 1 : _settings$loops,
@@ -68,6 +70,7 @@
             this.waits = [];
             this.index = 0;
             this.loops = loops;
+            this.async = async;
             this.loopBackward = loopBackward;
             this.loopBuffer = loops;
             this.dir = direction;
@@ -113,16 +116,18 @@
                 this.loops = loops;
                 this.loopBuffer = loops;
 
+                if (!this.started) {
+                    if (this.dir === -1) {
+                        this.index = this.steps.length - 1;
+                    }
+                }
+
                 if (!this.playing) {
                     this.playing = true;
                     this.started = true;
                     this.running = false;
 
-                    if (this.running) {
-                        this.next();
-                    } else {
-                        this._run();
-                    }
+                    this._run();
 
                     this._trigger('play');
                 }
@@ -305,7 +310,6 @@
             value: function _run() {
                 var _this2 = this;
 
-                //console.log('run');
                 if (!this.started) {
                     return;
                 }
@@ -314,6 +318,7 @@
 
                 if (this.index < 0) {
                     if (this.loops !== -1) {
+                        // if (this.dir === -1 || (this.dir === 1 && this.loopBackward)) {
                         if (this.dir === -1 || this.dir === 1 && this.loopBackward) {
                             this.index = this.steps.length - 1;
                             this.loops = this.loops + this.dir;
@@ -342,7 +347,7 @@
                     }
                 }
 
-                setTimeout(function () {
+                var go = function go() {
                     var step = _this2.steps[_this2.index],
                         steps = step;
 
@@ -363,7 +368,13 @@
                     }
 
                     _this2.index = _this2.index + _this2.dir;
-                });
+                };
+
+                if (this.async) {
+                    setTimeout(go);
+                } else {
+                    go();
+                }
 
                 return this;
             }
@@ -382,10 +393,7 @@
                             if (!_this3.playing) {
                                 return;
                             }
-
-                            // this.index = this.index + this.dir;
                             _this3._run();
-                            // this.next();
                             _this3._trigger('after');
                         }, _this3.waits[_this3.index]);
                     }
