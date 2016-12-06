@@ -71,6 +71,7 @@ describe("Screenplay tests", function () {
         });
     });
 
+
     describe("Next() With Promise", function () {
         it("should return 'ABC'", function (done) {
             let test = '';

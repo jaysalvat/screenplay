@@ -306,7 +306,7 @@
 
     /** Main tasks **/
 
-    gulp.task('default', [ 'watch' ]);
+    gulp.task('default', [ 'build', 'watch' ]);
 
     gulp.task('watch', function() {
         argv.dev = true;
