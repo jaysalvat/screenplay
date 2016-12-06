@@ -156,37 +156,4 @@ describe("Screenplay tests", function () {
                 });
         });
     });
-
-    describe("Next(), Prev(), Same()", function () {
-        it("should return 'CBACBA'", function (done) {
-            let test = '';
-            let screenplay = new Screenplay();
-
-            screenplay
-                .step(function (next) {
-                    test += 'A';
-                    next();
-                })
-                .step(function (next) {
-                    test += 'B';
-                    next();
-                })
-                .step(function (next) {
-                    test += 'C';
-                    next();
-                })
-                .done(function () {
-                    expect(test).to.be.equal('ABCBB');
-                    done();
-                })
-                .play()
-                .pause();
-
-            screenplay.next();
-            screenplay.next();
-            screenplay.previous();
-            screenplay.same();
-            screenplay.stop();
-        });
-    });
 });

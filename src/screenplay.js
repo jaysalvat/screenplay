@@ -3,7 +3,6 @@
 class Screenplay {
     constructor (settings = {}) {
         let {
-            async = false,
             direction = 1,
             loops = 1,
             loopBackward = false,
@@ -13,7 +12,6 @@ class Screenplay {
         this.waits = [];
         this.index = 0;
         this.loops = loops;
-        this.async = async;
         this.loopBackward = loopBackward;
         this.loopBuffer = loops;
         this.dir = direction;
@@ -249,7 +247,7 @@ class Screenplay {
             }
         }
 
-        let go = () => {
+        setTimeout(() => {
             let step = this.steps[this.index],
                 steps = step;
 
@@ -270,13 +268,7 @@ class Screenplay {
             }
 
             this.index = this.index + this.dir;
-        };
-
-        if (this.async) {
-            setTimeout(go);
-        } else {
-            go();
-        }
+        });
 
         return this;
     }

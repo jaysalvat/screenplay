@@ -56,9 +56,7 @@
 
             _classCallCheck(this, Screenplay);
 
-            var _settings$async = settings.async,
-                async = _settings$async === undefined ? false : _settings$async,
-                _settings$direction = settings.direction,
+            var _settings$direction = settings.direction,
                 direction = _settings$direction === undefined ? 1 : _settings$direction,
                 _settings$loops = settings.loops,
                 loops = _settings$loops === undefined ? 1 : _settings$loops,
@@ -70,7 +68,6 @@
             this.waits = [];
             this.index = 0;
             this.loops = loops;
-            this.async = async;
             this.loopBackward = loopBackward;
             this.loopBuffer = loops;
             this.dir = direction;
@@ -347,7 +344,7 @@
                     }
                 }
 
-                var go = function go() {
+                setTimeout(function () {
                     var step = _this2.steps[_this2.index],
                         steps = step;
 
@@ -368,13 +365,7 @@
                     }
 
                     _this2.index = _this2.index + _this2.dir;
-                };
-
-                if (this.async) {
-                    setTimeout(go);
-                } else {
-                    go();
-                }
+                });
 
                 return this;
             }
