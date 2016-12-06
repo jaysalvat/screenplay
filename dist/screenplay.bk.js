@@ -17,7 +17,7 @@
             exports: {}
         };
         factory(mod, mod.exports);
-        global.Screenplay = mod.exports;
+        global.screenplayBk = mod.exports;
     }
 })(this, function (module, exports) {
     'use strict';
@@ -56,9 +56,7 @@
 
             _classCallCheck(this, Screenplay);
 
-            var _settings$async = settings.async,
-                async = _settings$async === undefined ? false : _settings$async,
-                _settings$direction = settings.direction,
+            var _settings$direction = settings.direction,
                 direction = _settings$direction === undefined ? 1 : _settings$direction,
                 _settings$loops = settings.loops,
                 loops = _settings$loops === undefined ? 1 : _settings$loops,
@@ -68,21 +66,21 @@
 
             this.steps = [];
             this.waits = [];
-            this.async = async;
             this.index = 0;
             this.loops = loops;
             this.loopBackward = loopBackward;
             this.loopBuffer = loops;
             this.dir = direction;
-            this.inited = false;
-            this.playing = false;
-            this.timer1 = null;
-            this.timer2 = null;
+            this.indexes = [];
             this.markers = {};
+            this.playing = false;
+            this.started = false;
+            this.running = false;
             this.animationEnd = getEventName('animation');
             this.transitionEnd = getEventName('transition');
+            this.timer = null;
             this.events = {
-                'init': [],
+                'step': [],
                 'play': [],
                 'stop': [],
                 'start': [],
@@ -95,20 +93,15 @@
         }
 
         _createClass(Screenplay, [{
-            key: 'init',
-            value: function init() {
-                this.inited = true;
-                this.playing = false;
-
-                if (this.dir === -1) {
-                    this.index = this.steps.length - 1;
-                } else {
-                    this.index = 0;
+            key: 'stop',
+            value: function stop() {
+                if (this.started) {
+                    this.started = false;
+                    this.running = false;
+                    this.playing = false;
+                    this.finale.call(this);
+                    this._trigger('stop');
                 }
-
-                this._trigger('init');
-
-                this._run();
 
                 return this;
             }
@@ -120,24 +113,20 @@
                 this.loops = loops;
                 this.loopBuffer = loops;
 
+                if (!this.started) {
+                    if (this.dir === -1) {
+                        this.index = this.steps.length - 1;
+                    }
+                }
+
                 if (!this.playing) {
                     this.playing = true;
+                    this.started = true;
+                    this.running = false;
+
+                    this._run();
 
                     this._trigger('play');
-
-                    if (this.inited) {
-                        this.next();
-                    } else {
-                        this.inited = true;
-
-                        if (this.dir === -1) {
-                            this.index = this.steps.length - 1;
-                        } else {
-                            this.index = 0;
-                        }
-
-                        this._run();
-                    }
                 }
 
                 return this;
@@ -147,8 +136,6 @@
             value: function pause() {
                 if (this.playing) {
                     this.playing = false;
-
-                    this._break();
                     this._trigger('pause');
                 }
 
@@ -160,34 +147,12 @@
                 return this.playing ? this.pause() : this.play();
             }
         }, {
-            key: 'stop',
-            value: function stop() {
-                if (this.inited) {
-                    this.playing = false;
-                    this.inited = false;
-
-                    this._break();
-                    this._trigger('stop');
-
-                    this.finale.call(this);
-                }
-
-                return this;
-            }
-        }, {
-            key: 'done',
-            value: function done(fn) {
-                this.finale = fn;
-
-                return this;
-            }
-        }, {
             key: 'previous',
             value: function previous() {
                 var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
-                if (this.inited) {
-                    this.index = this.index - nb * this.dir;
+                if (this.started) {
+                    this.index = this.index - (nb + 1) * this.dir;
                     this._run();
                 }
 
@@ -198,8 +163,8 @@
             value: function next() {
                 var nb = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
 
-                if (this.inited) {
-                    this.index = this.index + nb * this.dir;
+                if (this.started) {
+                    this.index = this.index + (nb - 1) * this.dir;
                     this._run();
                 }
 
@@ -208,6 +173,7 @@
         }, {
             key: 'same',
             value: function same() {
+                this.index = this.index - 1 * this.dir;
                 this._run();
 
                 return this;
@@ -220,14 +186,20 @@
                 return this._run();
             }
         }, {
-            key: 'loop',
-            value: function loop() {
-                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
-                var loopBackward = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.loopBackward;
+            key: 'step',
+            value: function step(fn) {
+                var repeat = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
 
-                this.loops = loops;
-                this.loopBackward = loopBackward;
-                this.loopBuffer = loops;
+                for (var i = 0; i < repeat; i++) {
+                    this.steps.push(fn);
+                }
+
+                return this;
+            }
+        }, {
+            key: 'wait',
+            value: function wait(time) {
+                this.waits[this.steps.length - 1] = time;
 
                 return this;
             }
@@ -257,24 +229,21 @@
                 return this.direction(this.dir * -1);
             }
         }, {
-            key: 'step',
-            value: function step(fn) {
-                var repeat = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-
-                for (var i = 0; i < repeat; i++) {
-                    this.steps.push(fn);
-                }
+            key: 'done',
+            value: function done(fn) {
+                this.finale = fn;
 
                 return this;
             }
         }, {
-            key: 'wait',
-            value: function wait(time) {
-                this.waits[this.steps.length - 1] = time;
+            key: 'loop',
+            value: function loop() {
+                var loops = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : -1;
+                var loopBackward = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this.loopBackward;
 
-                if (time) {
-                    this.async = true;
-                }
+                this.loops = loops;
+                this.loopBackward = loopBackward;
+                this.loopBuffer = loops;
 
                 return this;
             }
@@ -334,20 +303,15 @@
                 return this;
             }
         }, {
-            key: '_break',
-            value: function _break() {
-                if (this.started) {
-                    this.started = false;
-                    this._trigger('after');
-                }
-
-                clearTimeout(this.timer1);
-                clearTimeout(this.timer2);
-            }
-        }, {
             key: '_run',
             value: function _run() {
                 var _this2 = this;
+
+                if (!this.started) {
+                    return;
+                }
+
+                this.running = true;
 
                 if (this.index < 0) {
                     if (this.loops !== -1) {
@@ -357,14 +321,10 @@
                         } else {
                             return this.stop();
                         }
-                    } else {
-                        this.index = this.steps.length - 1;
                     }
 
                     if (this.loops === 0 || this.loops > this.loopBuffer) {
                         return this.stop();
-                    } else {
-                        this._trigger('loop');
                     }
                 }
 
@@ -376,22 +336,17 @@
                         } else {
                             return this.stop();
                         }
-                    } else {
-                        this.index = 0;
                     }
 
                     if (this.loops === 0 || this.loops > this.loopBuffer) {
                         return this.stop();
-                    } else {
-                        this._trigger('loop');
                     }
                 }
 
-                var go = function go() {
+                setTimeout(function () {
                     var step = _this2.steps[_this2.index],
                         steps = step;
 
-                    _this2.started = true;
                     _this2._trigger('before');
 
                     if (typeof step === 'function') {
@@ -407,15 +362,9 @@
                             step.call(_this2, _this2._next.bind(_this2));
                         });
                     }
-                };
 
-                if (this.async) {
-                    clearTimeout(this.timer1);
-
-                    this.timer1 = setTimeout(go);
-                } else {
-                    go();
-                }
+                    _this2.index = _this2.index + _this2.dir;
+                });
 
                 return this;
             }
@@ -426,30 +375,17 @@
 
                 var elementCount = 0;
 
-                if (!this.playing) {
-                    this._trigger('after');
-                    return;
-                }
-
-                var go = function go() {
-                    if (_this3.started) {
-                        _this3.started = false;
-                        _this3._trigger('after');
-                    }
-
-                    _this3.index = _this3.index + _this3.dir;
-                    _this3._run();
-                };
-
                 var done = function done() {
                     if (--_this3.concurrentSteps <= 0) {
-                        if (_this3.async) {
-                            clearTimeout(_this3.timer2);
+                        clearTimeout(_this3.timer);
 
-                            _this3.timer2 = setTimeout(go, _this3.waits[_this3.index]);
-                        } else {
-                            go();
-                        }
+                        _this3.timer = setTimeout(function () {
+                            if (!_this3.playing) {
+                                return;
+                            }
+                            _this3._run();
+                            _this3._trigger('after');
+                        }, _this3.waits[_this3.index]);
                     }
                 };
 
@@ -527,4 +463,4 @@
 });
 
 
-//# sourceMappingURL=maps/screenplay.js.map
+//# sourceMappingURL=maps/screenplay.bk.js.map

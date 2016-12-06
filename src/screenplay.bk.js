@@ -3,7 +3,6 @@
 class Screenplay {
     constructor (settings = {}) {
         let {
-            async = false,
             direction = 1,
             loops = 1,
             loopBackward = false,
@@ -11,21 +10,21 @@ class Screenplay {
 
         this.steps = [];
         this.waits = [];
-        this.async = async;
         this.index = 0;
         this.loops = loops;
         this.loopBackward = loopBackward;
         this.loopBuffer = loops;
         this.dir = direction;
-        this.inited = false;
-        this.playing = false;
-        this.timer1 = null;
-        this.timer2 = null;
+        this.indexes = [];
         this.markers = {};
+        this.playing = false;
+        this.started = false;
+        this.running = false;
         this.animationEnd = getEventName('animation');
         this.transitionEnd = getEventName('transition');
+        this.timer = null;
         this.events = {
-            'init': [],
+            'step': [],
             'play': [],
             'stop': [],
             'start': [],
@@ -37,45 +36,36 @@ class Screenplay {
         this.finale = () => {};
     }
 
-    init() {
-        this.inited = true;
-        this.playing = false;
-
-        if (this.dir === -1) {
-            this.index = this.steps.length - 1;
-        } else {
-            this.index = 0;
+    stop() {
+        if (this.started) {
+            this.started = false;
+            this.running = false;
+            this.playing = false;
+            this.finale.call(this);
+            this._trigger('stop');
         }
 
-        this._trigger('init');
-
-        this._run();
-
-        return this;
+         return this;
     }
 
     play(loops = this.loops) {
         this.loops = loops;
         this.loopBuffer = loops;
 
+        if (!this.started) {
+            if (this.dir === -1) {
+                this.index = this.steps.length - 1;
+            }
+        }
+
         if (!this.playing) {
             this.playing = true;
+            this.started = true;
+            this.running = false;
+
+            this._run();
 
             this._trigger('play');
-
-            if (this.inited) {
-                this.next();
-            } else {
-                this.inited = true;
-
-                if (this.dir === -1) {
-                    this.index = this.steps.length - 1;
-                } else {
-                    this.index = 0;
-                }
-
-                this._run();
-            }
         }
 
         return this;
@@ -84,8 +74,6 @@ class Screenplay {
     pause() {
         if (this.playing) {
             this.playing = false;
-
-            this._break();
             this._trigger('pause');
         }
 
@@ -96,29 +84,9 @@ class Screenplay {
         return this.playing ? this.pause() : this.play();
     }
 
-    stop() {
-        if (this.inited) {
-            this.playing = false;
-            this.inited = false;
-
-            this._break();
-            this._trigger('stop');
-
-            this.finale.call(this);
-        }
-
-        return this;
-    }
-
-    done(fn) {
-        this.finale = fn;
-
-        return this;
-    }
-
     previous(nb = 1) {
-        if (this.inited) {
-            this.index = this.index - (nb * this.dir);
+        if (this.started) {
+            this.index = this.index - ((nb + 1) * this.dir);
             this._run();
         }
 
@@ -126,8 +94,8 @@ class Screenplay {
     }
 
     next(nb = 1) {
-        if (this.inited) {
-            this.index = this.index + (nb * this.dir);
+        if (this.started) {
+            this.index = this.index + ((nb - 1) * this.dir);
             this._run();
         }
 
@@ -135,6 +103,7 @@ class Screenplay {
     }
 
     same() {
+        this.index = this.index - (1 * this.dir);
         this._run();
 
         return this;
@@ -146,10 +115,16 @@ class Screenplay {
         return this._run();
     }
 
-    loop(loops = -1, loopBackward = this.loopBackward) {
-        this.loops = loops;
-        this.loopBackward = loopBackward;
-        this.loopBuffer = loops;
+    step(fn, repeat = 1) {
+        for (let i = 0; i < repeat; i++) {
+            this.steps.push(fn);
+        }
+
+        return this;
+    }
+
+    wait(time) {
+        this.waits[this.steps.length - 1] = time;
 
         return this;
     }
@@ -176,20 +151,16 @@ class Screenplay {
         return this.direction(this.dir * -1);
     }
 
-    step(fn, repeat = 1) {
-        for (let i = 0; i < repeat; i++) {
-            this.steps.push(fn);
-        }
+    done(fn) {
+        this.finale = fn;
 
         return this;
     }
 
-    wait(time) {
-        this.waits[this.steps.length - 1] = time;
-
-        if (time) {
-            this.async = true;
-        }
+    loop(loops = -1, loopBackward = this.loopBackward) {
+        this.loops = loops;
+        this.loopBackward = loopBackward;
+        this.loopBuffer = loops;
 
         return this;
     }
@@ -238,17 +209,13 @@ class Screenplay {
         return this;
     }
 
-    _break() {
-        if (this.started) {
-            this.started = false;
-            this._trigger('after');
+    _run() {
+        if (!this.started) {
+            return;
         }
 
-        clearTimeout(this.timer1);
-        clearTimeout(this.timer2);
-    }
+        this.running = true;
 
-    _run() {
         if (this.index < 0) {
             if (this.loops !== -1) {
                 if (this.dir === -1 || (this.dir === 1 && this.loopBackward)) {
@@ -257,14 +224,10 @@ class Screenplay {
                 } else {
                     return this.stop();
                 }
-            } else {
-                this.index = this.steps.length - 1;
             }
 
             if (this.loops === 0 || this.loops > this.loopBuffer) {
                 return this.stop();
-            } else {
-                this._trigger('loop');
             }
         }
 
@@ -276,22 +239,17 @@ class Screenplay {
                 } else {
                     return this.stop();
                 }
-            } else {
-                this.index = 0;
             }
 
             if (this.loops === 0 || this.loops > this.loopBuffer) {
                 return this.stop();
-            } else {
-                this._trigger('loop');
             }
         }
 
-        let go = () => {
+        setTimeout(() => {
             let step = this.steps[this.index],
                 steps = step;
 
-            this.started = true;
             this._trigger('before');
 
             if (typeof step === 'function') {
@@ -307,15 +265,9 @@ class Screenplay {
                     step.call(this, this._next.bind(this));
                 });
             }
-        };
 
-        if (this.async) {
-            clearTimeout(this.timer1);
-
-            this.timer1 = setTimeout(go);
-        } else {
-            go();
-        }
+            this.index = this.index + this.dir;
+        });
 
         return this;
     }
@@ -323,30 +275,17 @@ class Screenplay {
     _next(elements) {
         let elementCount = 0;
 
-        if (!this.playing) {
-            this._trigger('after');
-            return;
-        }
-
-        let go = () => {
-            if (this.started) {
-                this.started = false;
-                this._trigger('after');
-            }
-
-            this.index = this.index + this.dir;
-            this._run();
-        };
-
         let done = () => {
             if (--this.concurrentSteps <= 0) {
-                if (this.async) {
-                    clearTimeout(this.timer2);
+                clearTimeout(this.timer);
 
-                    this.timer2 = setTimeout(go, this.waits[this.index]);
-                } else {
-                    go();
-                }
+                this.timer = setTimeout(() => {
+                    if (!this.playing) {
+                        return;
+                    }
+                    this._run();
+                    this._trigger('after');
+                }, this.waits[this.index]);
             }
         };
 

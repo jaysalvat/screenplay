@@ -21,6 +21,28 @@ describe("Screenplay tests", function () {
     });
 
     describe("Play()", function () {
+        it("should return 'ABC' with play()", function () {
+            let test = '';
+            let screenplay = new Screenplay();
+
+            screenplay
+                .step(function (next) {
+                    test += 'A';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'B';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'C';
+                    next();
+                })
+                .play();
+
+            expect(test).to.be.equal('ABC');
+        });
+
         it("should return 'ABCABC' with play(2)", function () {
             let test = '';
             let screenplay = new Screenplay();
@@ -38,10 +60,37 @@ describe("Screenplay tests", function () {
                     test += 'C';
                     next();
                 })
-                .play(2)
+                .play(2);
+
+            expect(test).to.be.equal('ABCABC');
+        });
+
+        it("should return '' with play(2) asynchronous", function (done) {
+            let test = '';
+            let screenplay = new Screenplay({
+                async: true
+            });
+
+            screenplay
+                .step(function (next) {
+                    test += 'A';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'B';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'C';
+                    next();
+                })
                 .done(function () {
                     expect(test).to.be.equal('ABCABC');
-                });
+                    done();
+                })
+                .play(2);
+
+            expect(test).to.be.equal('');
         });
     });
 
@@ -64,14 +113,13 @@ describe("Screenplay tests", function () {
                     next();
                 })
                 .loop(3)
-                .play()
-                .done(function () {
-                    expect(test).to.be.equal('ABCABCABC');
-                });
+                .play();
+
+                expect(test).to.be.equal('ABCABCABC');
         });
     });
 
-    describe("Next() With Promise", function () {
+    describe("Go to next function With Promise", function () {
         it("should return 'ABC'", function (done) {
             let test = '';
             let screenplay = new Screenplay();
@@ -131,7 +179,7 @@ describe("Screenplay tests", function () {
     });
 
     describe("Reverse()", function () {
-        it("should return 'CBACBA'", function (done) {
+        it("should return 'CBACBA' with play(2)", function () {
             let test = '';
             let screenplay = new Screenplay();
 
@@ -149,11 +197,78 @@ describe("Screenplay tests", function () {
                     next();
                 })
                 .reverse()
-                .play(2)
+                .play(2);
+
+            expect(test).to.be.equal('CBACBA');
+        });
+    });
+
+    describe("Init(), Next(), Previous(), Same(), Stop()", function () {
+        it("should return 'CBACBA' with navigation methods", function (done) {
+            let test = '';
+            let screenplay = new Screenplay();
+
+            screenplay
+                .step(function (next) {
+                    test += 'A';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'B';
+                    next();
+                })
+                .step(function (next) {
+                    test += 'C';
+                    next();
+                })
                 .done(function () {
-                    expect(test).to.be.equal('CBACBA');
+                    expect(test).to.be.equal('ABCBAA');
                     done();
                 });
+
+            screenplay.init();
+            screenplay.next();
+            screenplay.next();
+            screenplay.previous();
+            screenplay.previous();
+            screenplay.same();
+            screenplay.stop();
+
+            expect(test).to.be.equal('ABCBAA');
+        });
+    });
+
+    describe("on()", function () {
+        it("should return 'IN-BE-AF-BE-AF-PL-BE-AF-ST' by events", function () {
+            let test = '';
+            let screenplay = new Screenplay();
+
+            screenplay
+                .step(function (next) {
+                    next();
+                }, 3)
+                .on('init', function () {
+                    test += 'IN-';
+                })
+                .on('play', function () {
+                    test += 'PL-';
+                })
+                .on('before', function () {
+                    test += 'BE-';
+                })
+                .on('after', function () {
+                    test += 'AF-';
+                })
+                .on('stop', function () {
+                    test += 'ST';
+                });
+
+            screenplay.init();
+            screenplay.next();
+            screenplay.play();
+            screenplay.stop();
+
+            expect(test).to.be.equal('IN-BE-AF-BE-AF-PL-BE-AF-ST');
         });
     });
 });
